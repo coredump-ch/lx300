@@ -1,10 +1,25 @@
 # -*- coding: utf-8 -*-
+"""
+LX300 Twitterstream printer.
+
+Usage:
+    twitter.py timeline
+    twitter.py mentions
+    twitter.py combined
+
+Options:
+    -h --help  Show this screen.
+    --version  Show version.
+
+"""
 from __future__ import print_function, division, absolute_import
 
 import os
 import sys
+import time
 
 import tweepy
+from docopt import docopt
 
 import lx300
 
@@ -44,31 +59,45 @@ def do_auth():
     return api
 
 
-def get_tweets(api, username):
-    user = api.get_user(username)
-    return user.timeline()
+def print_tweets(printer, tweets, header=False):
+    if header:
+        printer.write("                        _                       \n")
+        printer.write("  ___ ___  _ __ ___  __| |_   _ _ __ ___  _ __  \n")
+        printer.write(" / __/ _ \| '__/ _ \/ _` | | | | '_ ` _ \| '_ \ \n")
+        printer.write("| (_| (_) | | |  __/ (_| | |_| | | | | | | |_) |\n")
+        printer.write(" \___\___/|_|  \___|\__,_|\__,_|_| |_| |_| .__/ \n")
+        printer.write("                                         |_|    \n")
+        printer.write('\n')
+        printer.write('Tweets:\n\n')
+        printer.write('---------------\n\n')
+    for tweet in tweets:
+        printer.write(tweet.text)
+        meta = {
+            'user_name': tweet.author.name,
+            'screen_name': tweet.author.screen_name,
+            'post_date': tweet.created_at.strftime('%d.%m.%Y %H:%M:%S'),
+        }
+        printer.write('\nPosted by {user_name} (@{screen_name}) on {post_date}\n'.format(**meta))
+        printer.write('---------------\n')
 
 
 if __name__ == '__main__':
-    # Get twitter username
-    username = sys.argv[1]
+    # Parse arguments
+    arguments = docopt(__doc__, version='v0.1.0')
 
-    # Twitter stuff
+    # Twitter auth stuff
     api = do_auth()
-    tweets = get_tweets(api, username)
-    
-    # Initialize printer
-    printer = lx300.LX300()
+
+    # Get tweets
+    tweets = []
+    if arguments['timeline'] or arguments['combined']:
+        tweets += api.user_timeline(count=2)
+    if arguments['mentions'] or arguments['combined']:
+        tweets += api.mentions_timeline(count=2)
+
+    # Sort tweets by date
+    tweets = sorted(tweets, key=lambda x: x.created_at)
 
     # Print!!1!
-    printer.write("                        _                       \n")
-    printer.write("  ___ ___  _ __ ___  __| |_   _ _ __ ___  _ __  \n")
-    printer.write(" / __/ _ \| '__/ _ \/ _` | | | | '_ ` _ \| '_ \ \n")
-    printer.write("| (_| (_) | | |  __/ (_| | |_| | | | | | | |_) |\n")
-    printer.write(" \___\___/|_|  \___|\__,_|\__,_|_| |_| |_| .__/ \n")
-    printer.write("                                         |_|    \n")
-    printer.write('\n')
-    printer.write('Tweets:\n\n')
-    for tweet in tweets:
-        printer.write(tweet.text.encode('ascii', 'replace'))
-        printer.write('\n---------------\n\n')
+    printer = lx300.LX300()
+    print_tweets(printer, tweets, header=False)
