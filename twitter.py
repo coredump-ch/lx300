@@ -3,13 +3,12 @@
 LX300 Twitterstream printer.
 
 Usage:
-    twitter.py timeline
-    twitter.py mentions
-    twitter.py combined
+    twitter.py [--noloop]
 
 Options:
     -h --help  Show this screen.
     --version  Show version.
+    --noloop   Don't loop, only print tweets once.
 
 """
 from __future__ import print_function, division, absolute_import
@@ -22,6 +21,10 @@ import tweepy
 from docopt import docopt
 
 import lx300
+
+
+INITIAL_TWEETS = 3
+LOOP_SLEEP = 120  # Note: Only 15 Twitter API requests per 15 minute window are allowed!
 
 
 def do_auth():
@@ -59,6 +62,37 @@ def do_auth():
     return api
 
 
+def get_tweets(api, count=5, since_id=None):
+    """Fetch tweets.
+
+    Args:
+        api:
+            The tweepy API instance.
+        count:
+            Number of tweets to return.
+        since_id:
+            Only fetch tweets since the specified tweet ID.
+
+    Returns:
+        List of tweets, sorted by date (oldest first).
+
+    """
+    # Handle "since_id" argument
+    kwargs = {}
+    if since_id:
+        kwargs['since_id'] = since_id
+
+    # Fetch tweets
+    tweets = []
+    tweets += api.user_timeline(count=count, **kwargs)
+    tweets += api.mentions_timeline(count=count, **kwargs)
+
+    # Sort tweets by date
+    tweets = sorted(tweets, key=lambda x: x.created_at)
+
+    return tweets[-count:]
+
+
 def print_tweets(printer, tweets, header=False):
     if header:
         printer.write("                        _                       \n")
@@ -68,8 +102,8 @@ def print_tweets(printer, tweets, header=False):
         printer.write(" \___\___/|_|  \___|\__,_|\__,_|_| |_| |_| .__/ \n")
         printer.write("                                         |_|    \n")
         printer.write('\n')
-        printer.write('Tweets:\n\n')
-        printer.write('---------------\n\n')
+        printer.write('Tweets & Mentions:\n\n')
+        printer.write('---------------\n')
     for tweet in tweets:
         printer.write(tweet.text)
         meta = {
@@ -77,7 +111,7 @@ def print_tweets(printer, tweets, header=False):
             'screen_name': tweet.author.screen_name,
             'post_date': tweet.created_at.strftime('%d.%m.%Y %H:%M:%S'),
         }
-        printer.write('\nPosted by {user_name} (@{screen_name}) on {post_date}\n'.format(**meta))
+        printer.write('\nTweeted by {user_name} (@{screen_name}) on {post_date}\n'.format(**meta))
         printer.write('---------------\n')
 
 
@@ -85,19 +119,19 @@ if __name__ == '__main__':
     # Parse arguments
     arguments = docopt(__doc__, version='v0.1.0')
 
-    # Twitter auth stuff
+    # Initialize API and printer
     api = do_auth()
-
-    # Get tweets
-    tweets = []
-    if arguments['timeline'] or arguments['combined']:
-        tweets += api.user_timeline(count=2)
-    if arguments['mentions'] or arguments['combined']:
-        tweets += api.mentions_timeline(count=2)
-
-    # Sort tweets by date
-    tweets = sorted(tweets, key=lambda x: x.created_at)
-
-    # Print!!1!
     printer = lx300.LX300()
-    print_tweets(printer, tweets, header=False)
+
+    # Loop & look for new tweets
+    latest_id = None
+    while True:
+        print('Fetching tweets...')
+        tweets = get_tweets(api, count=INITIAL_TWEETS, since_id=latest_id)
+        print('Found {0} new tweets.'.format(len(tweets)))
+        print_tweets(printer, tweets, header=(latest_id is None))
+        if arguments['--noloop']:
+            break
+        if tweets:
+            latest_id = tweets[-1].id
+        time.sleep(LOOP_SLEEP)
