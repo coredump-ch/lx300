@@ -3,12 +3,13 @@
 LX300 Twitterstream printer.
 
 Usage:
-    twitter.py [--noloop]
+    twitter.py [--noheader] [--noloop]
 
 Options:
-    -h --help  Show this screen.
-    --version  Show version.
-    --noloop   Don't loop, only print tweets once.
+    -h --help   Show this screen.
+    --version   Show version.
+    --noheader  Don't print header.
+    --noloop    Don't loop, only print tweets once.
 
 """
 from __future__ import print_function, division, absolute_import
@@ -106,12 +107,14 @@ def print_tweets(printer, tweets, header=False):
         printer.write('---------------\n')
     for tweet in tweets:
         printer.write(tweet.text)
-        meta = {
-            'user_name': tweet.author.name,
-            'screen_name': tweet.author.screen_name,
-            'post_date': tweet.created_at.strftime('%d.%m.%Y %H:%M:%S'),
-        }
-        printer.write('\nTweeted by {user_name} (@{screen_name}) on {post_date}\n'.format(**meta))
+        meta = (
+            lx300.Escape.italic_start,
+            tweet.author.name,
+            tweet.author.screen_name,
+            tweet.created_at.strftime('%d.%m.%Y %H:%M:%S'),
+            lx300.Escape.italic_end,
+        )
+        printer.write('\n{0}Tweeted by {1} (@{2}) on {3}{4}\n'.format(*meta))
         printer.write('---------------\n')
 
 
@@ -125,11 +128,13 @@ if __name__ == '__main__':
 
     # Loop & look for new tweets
     latest_id = None
+    print_header = not arguments['--noheader']
     while True:
         print('Fetching tweets...')
         tweets = get_tweets(api, count=INITIAL_TWEETS, since_id=latest_id)
         print('Found {0} new tweets.'.format(len(tweets)))
-        print_tweets(printer, tweets, header=(latest_id is None))
+        print_tweets(printer, tweets, header=print_header)
+        print_header = False
         if arguments['--noloop']:
             break
         if tweets:
