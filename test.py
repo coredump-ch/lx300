@@ -8,6 +8,6 @@ if __name__ == '__main__':
     try:
         while 1:
             text = raw_input('> ')
-            printer.write(text + '\n')
+            printer.write(text.decode('utf8') + '\n')
     except (KeyboardInterrupt, EOFError):
         print('\nGoodbye')
