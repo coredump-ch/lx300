@@ -1,0 +1,9 @@
+textarea {
+    width: 100%;
+    height: 200px;
+}
+
+#button-container button {
+    display: block;
+    margin: 0px auto;
+}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="page-header">
+        <h1>linedump</h1>
+    </div>
+    <p class="lead">Fülle
+    <a href="http://images2.wikia.nocookie.net/__cb20081222171126/uncyclopedia/images/9/91/Loooooooooooooooooooooooooooooooooooooooooongcat.JPG">Longcat</a>
+    mit deiner Nachricht!</p>
+
+    <form action="/print" method="post" role="form">
+        <div class="form-group">
+            <label for="text">Text</label><br>
+            <textarea name="text" maxlength="500" placeholder="Text hier eingeben..."></textarea><br>
+        </div>
+        <div id="button-container">
+            <button type="submit" class="btn btn-primary btn-lg">Print!</button>
+        </div>
+    </form>
+{% endblock %}
