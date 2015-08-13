@@ -4,6 +4,8 @@ Epson LX300 Twitterstream
 This project prints a twitterstream on an LX300+ dot matrix
 printer.
 
+Service manual LX300: http://diagramasde.com/diagramas/otros2/sm_%20lx300+II.pdfts
+
 Files
 -----
 
