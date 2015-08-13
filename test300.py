@@ -45,9 +45,9 @@ CAT = "                                 |\         /|\n" + \
 "       /                                                                \\\n" + \
 "      /                                                                  \\\n" + \
 "     /                                                                    \\\n" + \
-"    /        Visit http://152.96.159.x/ on your smartphone to send text.   \\\n" + \
+"    /        Visit http://152.96.159.x/ to send text.                      \\\n" + \
 "   /                                                                        \\\n" + \
-"  /                                                                          \\\n" + \
+"  /                  Please be kind and don't kill all our paper ;)          \\\n" + \
 " /                                                                            \\\n" + \
 "#                                                                              #\n" + \
 "|                                                                              |\n" + \
